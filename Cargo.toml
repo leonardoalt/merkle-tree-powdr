@@ -1,0 +1,12 @@
+[package]
+name = "merkle_tree_powdr"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+bitmaps = { version = "3.2.0", default-features = false }
+ruint = { version = "1.10.1", default-features = false}
+
+runtime = { path = "../powdr2/riscv/runtime" }
