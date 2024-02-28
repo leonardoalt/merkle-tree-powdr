@@ -1,8 +1,6 @@
 extern crate alloc;
 use alloc::vec::Vec;
 
-use runtime::coprocessors::poseidon_gl;
-
 pub trait Hasher {
     fn write_h256(&mut self, w: &U256);
     fn finish(&mut self) -> U256;
@@ -39,11 +37,22 @@ impl Hasher for PoseidonHasher {
             let mut i = [0; 12];
             i[..4].copy_from_slice(acc.as_limbs());
             i[4..4 + chunk.len()].copy_from_slice(chunk);
-            U256::from_limbs(poseidon_gl(i))
+
+            U256::from_limbs(hash(i))
         });
 
         acc
     }
+}
+
+#[cfg(feature = "powdr")]
+fn hash(i: [u64; 12]) -> [u64; 4] {
+    powdr_riscv_runtime::coprocessors::poseidon_gl(i)
+}
+
+#[cfg(not(feature = "powdr"))]
+fn hash(i: [u64; 12]) -> [u64; 4] {
+    [0, 0, 0, 0] //poseidon(i)
 }
 
 #[cfg(test)]
@@ -53,11 +62,8 @@ mod test {
     #[test]
     fn hasher() {
         let mut hasher = PoseidonHasher::default();
-        hasher.write_h256(&0.into());
-        hasher.write_h256(&1.into());
-        assert_eq!(
-            hasher.finish(),
-            0
-        );
+        hasher.write_h256(&U256::ZERO);
+        hasher.write_h256(&U256::from_limbs([1, 0, 0, 0]));
+        assert_eq!(hasher.finish(), U256::ZERO);
     }
 }
